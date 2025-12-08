@@ -3,7 +3,7 @@
 
 Chess engine written in Rust. Hopefully will be strong enough to beat me, but I'll be happy as long as it's not fucking trash
 
-# Primmary goals:
+# Primary goals:
 - [ ] Move generation
 - [ ] MiniMax AI
   - [ ] Alpha Beta pruning
