@@ -40,7 +40,7 @@ pub struct ColorSet {
     queens: u64,
     rooks: u64,
     bishops: u64,
-    horses: u64,
+    knights: u64,
     pawns: u64,
     // bitboard representing any pawn which previously moved two squares
     en_passe: u64,

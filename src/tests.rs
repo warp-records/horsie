@@ -69,4 +69,22 @@ mod tests {
 
         assert_eq!(span, expected);
     }
+
+    #[test]
+    pub fn test_knight() {
+
+        let span: u64 = gen_knight(6, 4);
+        let expected = chessboard!(
+            0b_00000000
+            0b_00000000
+            0b_00000101
+            0b_00001000
+            0b_00000000
+            0b_00001000
+            0b_00000101
+            0b_00000000
+        );
+
+        assert_eq!(span, expected);
+    }
 }

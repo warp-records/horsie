@@ -58,6 +58,32 @@ pub fn gen_straight(x: u8, y: u8) -> u64 {
     col | row
 }
 
+// 01010000
+// 10001000
+// 00000000
+// 10001000
+// 01010000
+// 00000000
+// 00000000
+// 00000000
+pub fn gen_knight(x: u8, y: u8) -> u64 {
+    // centered at 2, 2
+    const knight_moves: u64 = 0x5088008850000000;
+    let x = x as i8;
+    let y = y as i8;
+
+    let mut moves: u64 = shr(knight_moves, (x-2) + (y-2)*8);
+    if x < 2 {
+        moves &= vertical_zeros_right << 0;
+        moves &= vertical_zeros_right << 1;
+    } else if x > 5 {
+        moves &= vertical_zeros_left >> 0;
+        moves &= vertical_zeros_left >> 1;
+    }
+
+    moves
+}
+
 pub fn print_bitboard(bb: u64) {
     for rank in (0..8).rev() {
         for file in (0..8).rev() {
