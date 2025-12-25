@@ -55,31 +55,31 @@ pub fn gen_diagonal_ray(x: u8, y: u8) -> u64 {
 pub fn gen_clipped_diagonal(x: u8, y: u8, other_pieces: u64) -> u64 {
     let (right_down, right_up) = get_diagonal_rays(x, y);
 
-    let top_part = u64::MAX << (7-y)*8;
-    let bottom_part = !top_part;
+    let top_area = u64::MAX << (7-y)*8;
+    let bottom_area = !top_area;
     // pretty sure this will work
-    let right_part = u64::wrapping_mul((1u64 << 8-x) - 1, column_left) & !column_left;
+    let right_area = u64::wrapping_mul((1u64 << 8-x) - 1, column_left) & !column_left;
     // bottom row is lost during first multiply
-    let right_part = right_part | right_part >> 8;
-    let left_part = !right_part;
+    let right_area = right_area | right_area >> 8;
+    let left_area = !right_area;
 
     // parse blockers and generate blocked rays by quadrant
-    let quad1 = right_part & top_part;
+    let quad1 = right_area & top_area;
     let quad1_blockers: u64 = right_up & quad1 & other_pieces;
     let nearest = quad1_blockers.trailing_zeros();
     let quad1_diag = right_up & (u64::MAX >> 64-(nearest+1)) & quad1;
 
-    let quad2 = left_part & top_part;
+    let quad2 = left_area & top_area;
     let quad2_blockers: u64 = right_down & quad2 & other_pieces;
     let nearest = quad2_blockers.trailing_zeros();
     let quad2_diag = right_down & (u64::MAX >> 64-(nearest+1)) & quad2;
 
-    let quad3 = left_part & bottom_part;
+    let quad3 = left_area & bottom_area;
     let quad3_blockers: u64 = right_up & quad3 & other_pieces;
     let nearest = quad3_blockers.leading_zeros();
     let quad3_diag = right_up & (u64::MAX << 64-(nearest+1)) & quad3;
 
-    let quad4 = right_part & bottom_part;
+    let quad4 = right_area & bottom_area;
     let quad4_blockers: u64 = right_down & quad4 & other_pieces;
     let nearest = quad4_blockers.leading_zeros();
     let quad4_diag = right_down & (u64::MAX << 64-(nearest+1)) & quad4;
@@ -90,14 +90,43 @@ pub fn gen_clipped_diagonal(x: u8, y: u8, other_pieces: u64) -> u64 {
 const column_left: u64 = 0x8080808080808080;
 const row_top: u64 = 0xFF00000000000000;
 
-pub fn gen_straight_ray(x: u8, y: u8) -> u64 {
+fn gen_straight_rays(x: u8, y: u8) -> (u64, u64) {
     let x = x as i8;
     let y = y as i8;
 
     let col = shr(column_left, x);
     let row = shr(row_top, y*8);
 
+    (col, row)
+}
+
+pub fn gen_straight_ray(x: u8, y: u8) -> u64 {
+    let (col, row) = gen_straight_rays(x, y);
     col | row
+}
+
+pub fn gen_clipped_straight(x: u8, y: u8, other_pieces: u64) -> u64 {
+    let (col, row) = gen_straight_rays(x, y);
+
+    let top_area = u64::MAX << (7-y)*8;
+    let bottom_area = !top_area;
+    let right_area = u64::wrapping_mul((1u64 << 8-x) - 1, column_left) & !column_left;
+    let right_area = right_area | right_area >> 8;
+    let left_area = !right_area;
+
+    let nearest = (other_pieces & top_area).trailing_zeros();
+    let top_ray = col << 64-nearest & top_area;
+
+    let nearest = (other_pieces & bottom_area).leading_zeros();
+    let bottom_ray = col << 64-nearest & bottom_area;
+
+    let nearest = (other_pieces & left_area).trailing_zeros();
+    let left_ray = col << 64-nearest & left_area;
+
+    let nearest = (other_pieces & right_area).leading_zeros();
+    let right_ray = col << 64-nearest & right_area;
+
+    top_ray | bottom_ray | left_ray | right_ray
 }
 
 pub fn gen_knight(x: u8, y: u8) -> u64 {
