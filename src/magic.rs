@@ -1,5 +1,5 @@
 
-use std::cmp;
+use std::cmp::{min, max};
 use arrayvec::*;
 
 const right_down_diag: u64 = 0x8040201008040201;
@@ -67,22 +67,22 @@ pub fn gen_clipped_diagonal(x: u8, y: u8, other_pieces: u64) -> u64 {
     let quad1 = right_area & top_area;
     let quad1_blockers: u64 = right_up & quad1 & other_pieces;
     let nearest = quad1_blockers.trailing_zeros();
-    let quad1_diag = right_up & (u64::MAX >> 64-(nearest+1)) & quad1;
+    let quad1_diag = right_up & (u64::MAX >> 64-min(nearest+1, 64)) & quad1;
 
     let quad2 = left_area & top_area;
     let quad2_blockers: u64 = right_down & quad2 & other_pieces;
     let nearest = quad2_blockers.trailing_zeros();
-    let quad2_diag = right_down & (u64::MAX >> 64-(nearest+1)) & quad2;
+    let quad2_diag = right_down & (u64::MAX >> 64-min(nearest+1, 64)) & quad2;
 
     let quad3 = left_area & bottom_area;
     let quad3_blockers: u64 = right_up & quad3 & other_pieces;
     let nearest = quad3_blockers.leading_zeros();
-    let quad3_diag = right_up & (u64::MAX << 64-(nearest+1)) & quad3;
+    let quad3_diag = right_up & (u64::MAX << 64-min(nearest+1, 64)) & quad3;
 
     let quad4 = right_area & bottom_area;
     let quad4_blockers: u64 = right_down & quad4 & other_pieces;
     let nearest = quad4_blockers.leading_zeros();
-    let quad4_diag = right_down & (u64::MAX << 64-(nearest+1)) & quad4;
+    let quad4_diag = right_down & (u64::MAX << 64-min(nearest+1, 64)) & quad4;
 
     quad1_diag | quad2_diag | quad3_diag | quad4_diag
 }
