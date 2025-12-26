@@ -125,6 +125,30 @@ mod tests {
         );
 
         assert_eq!(span, expected);
+
+        let blockers = chessboard!(
+            0b_00000010
+            0b_00000000
+            0b_01000010
+            0b_00000000
+            0b_01000000
+            0b_00010001
+            0b_00000001
+            0b_00010001
+        );
+        let span: u64 = gen_clipped_diagonal(0, 0, blockers);
+        let expected: u64 = chessboard!(
+            0b_00000000
+            0b_01000000
+            0b_00100000
+            0b_00010000
+            0b_00001000
+            0b_00000100
+            0b_00000010
+            0b_00000001
+        );
+
+        assert_eq!(span, expected);
     }
 
     #[test]
@@ -154,6 +178,30 @@ mod tests {
 
         print_bitboard(span);
         print_bitboard(expected);
+
+        assert_eq!(span, expected);
+
+        let blockers = chessboard!(
+            0b_10000001
+            0b_00010000
+            0b_00000000
+            0b_00000000
+            0b_00000000
+            0b_00010000
+            0b_00000010
+            0b_01010000
+        );
+        let span: u64 = gen_clipped_straight(6, 7, blockers);
+        let expected = chessboard!(
+            0b_00000000
+            0b_00000000
+            0b_00000000
+            0b_00000000
+            0b_00000000
+            0b_00000000
+            0b_00000010
+            0b_00011101
+        );
 
         assert_eq!(span, expected);
     }
@@ -189,11 +237,11 @@ mod tests {
 
 // 0b_00000000
 // 0b_00000000
-// 0b_00010000
-// 0b_00010000
-// 0b_01111111
-// 0b_00010000
-// 0b_00010000
+// 0b_00000000
+// 0b_00000000
+// 0b_00000000
+// 0b_00000000
+// 0b_00000000
 // 0b_00000000
 
 // 3, 4
