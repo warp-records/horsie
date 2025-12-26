@@ -55,6 +55,9 @@ pub fn gen_diagonal_ray(x: u8, y: u8) -> u64 {
 pub fn gen_clipped_diagonal(x: u8, y: u8, other_pieces: u64) -> u64 {
     let (right_down, right_up) = get_diagonal_rays(x, y);
 
+    let piece_bit = 1u64 << coords_to_left_shift(x, y);
+
+    // partition board into areas relative to piece origin
     let top_area = u64::MAX << (7-y)*8;
     let bottom_area = !top_area;
     // pretty sure this will work
@@ -84,7 +87,7 @@ pub fn gen_clipped_diagonal(x: u8, y: u8, other_pieces: u64) -> u64 {
     let nearest = quad4_blockers.leading_zeros();
     let quad4_diag = right_down & (u64::MAX << 64-min(nearest+1, 64)) & quad4;
 
-    quad1_diag | quad2_diag | quad3_diag | quad4_diag
+    (quad1_diag | quad2_diag | quad3_diag | quad4_diag) & !piece_bit
 }
 
 const column_left: u64 = 0x8080808080808080;
@@ -132,7 +135,7 @@ pub fn gen_clipped_straight(x: u8, y: u8, other_pieces: u64) -> u64 {
     let mut right_ray = (u64::MAX >> min(nearest+1, 63)) & row & right_area;
     if right_ray == 0 { right_ray = row & right_area; }
 
-    top_ray | bottom_ray | left_ray | right_ray | piece_bit
+    (top_ray | bottom_ray | left_ray | right_ray) & !piece_bit
 }
 
 pub fn gen_knight(x: u8, y: u8) -> u64 {
