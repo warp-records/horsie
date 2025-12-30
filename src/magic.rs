@@ -29,10 +29,10 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
     }
 
     let mut table_sz: usize = 12;
-    if x == 0 || x == 7 {
+    if x != 0 && x != 7 {
         table_sz -= 1;
     }
-    if y == 0 || y == 7 {
+    if y != 0 && y != 7 {
         table_sz -= 1;
     }
 
@@ -72,18 +72,21 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
             }
 
             // check for collision at the index our magic gives us
-            let map_index = blocker_board.wrapping_mul(magic) as usize % blocker_map.len();
-            if blocker_map[map_index].is_some() {
-                found_magic = false;
-                break;
+            let map_index = (blocker_board.wrapping_mul(magic) >> (64-table_sz)) as usize;
+
+            let blocked_ray = if orthogonal {
+                gen_blocked_straight(x, y, blocker_board)
+            } else {
+                gen_blocked_diagonal(x, y, blocker_board)
+            };
+
+            if let Some(existing_move) = blocker_map[map_index] {
+                if existing_move != blocked_ray {
+                    found_magic = false;
+                    break;
+                }
             } else {
                 // populate blocker map with our current configuration
-                let blocked_ray = if orthogonal {
-                    gen_blocked_straight(x, y, blocker_board)
-                } else {
-                    gen_blocked_diagonal(x, y, blocker_board)
-                };
-
                 blocker_map[map_index] = Some(blocked_ray);
             }
         }
@@ -94,7 +97,7 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
 
     }
 
-    let blocker_map = blocker_map.into_iter().map(|opt| opt.unwrap())
+    let blocker_map = blocker_map.into_iter().map(|opt| opt.unwrap_or(0))
         .collect::<ArrayVec<u64, 4096>>();
 
     (blocker_map, magic)

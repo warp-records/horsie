@@ -7,6 +7,7 @@ mod tests {
     use crate::magic::*;
     use crate::movegen::*;
     use crate::chessboard;
+    use rand::{SeedableRng, Rng, rngs::StdRng};
 
     #[test]
     pub fn test_diagonals() {
@@ -85,7 +86,6 @@ mod tests {
             0b_00000000
         );
         let span: u64 = gen_blocked_diagonal(5, 4, blockers);
-        print_bitboard(span);
         let expected: u64 = chessboard!(
             0b_00000000
             0b_00000000
@@ -177,9 +177,6 @@ mod tests {
             0b_00000000
         );
 
-        print_bitboard(span);
-        print_bitboard(expected);
-
         assert_eq!(span, expected);
 
         let blockers = chessboard!(
@@ -228,9 +225,25 @@ mod tests {
 
     #[test]
     pub fn test_magics_gen() {
-        let table = gen_magic_table(4, 6, false);
-        println!("{:?}", table);
-        assert!(false);
+
+        let ray = gen_diagonal_ray(2, 4);
+        let (table, magic) = gen_magic_table(2, 4, false);
+
+        let mut rng = StdRng::seed_from_u64(0);
+        for _ in 0..1_000 {
+            let rand_board: u64 = rng.random::<u64>();
+            let mut blocker_board = rand_board & ray;
+
+            blocker_board &= !column_left;
+            blocker_board &= !(column_left >> 7);
+            blocker_board &= !row_top;
+            blocker_board &= !(row_top >> 56);
+
+            let table_sz = 10;
+
+            let map_index = (blocker_board.wrapping_mul(magic) >> (64-table_sz)) as usize;
+            assert!(table[map_index] != 0);
+        }
     }
 }
 
