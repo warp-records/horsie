@@ -49,8 +49,10 @@ fn get_diagonal_rays(x: u8, y: u8) -> (u64, u64) {
 
 /// generate bitboard of unbounded diagonal ray starting at position
 pub fn gen_diagonal_ray(x: u8, y: u8) -> u64 {
+    let piece_bit = 1u64 << coords_to_left_shift(x, y);
+
     let (right_down, right_up) = get_diagonal_rays(x, y);
-    right_down | right_up
+    (right_down | right_up) & !piece_bit
 }
 
 /// generate diagonal bitboard accounting for blockers, inclusive of blockers in ray and exclusve of origin
@@ -105,8 +107,10 @@ fn gen_straight_rays(x: u8, y: u8) -> (u64, u64) {
 
 /// generate bitboard of unbounded straight ray starting at position
 pub fn gen_straight_ray(x: u8, y: u8) -> u64 {
+    let piece_bit = 1u64 << coords_to_left_shift(x, y);
+
     let (col, row) = gen_straight_rays(x, y);
-    col | row
+    (col | row) & !piece_bit
 }
 
 pub fn gen_blocked_straight(x: u8, y: u8, other_pieces: u64) -> u64 {

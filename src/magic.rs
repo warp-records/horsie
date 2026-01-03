@@ -1,4 +1,5 @@
 
+use bitvec::prelude::*;
 use crate::movegen::*;
 use std::cmp::{min, max};
 use arrayvec::*;
@@ -39,27 +40,29 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
     // store positions of each bit from the range board
     // which are going to be toggling
     let mut bit_positions = ArrayVec::<u32, 12>::new();
+    let backup = range_board;
     while range_board != 0 {
         let next_pos = range_board.trailing_zeros();
         bit_positions.push(next_pos);
         range_board &= !(1u64 << next_pos);
     }
 
-    let mut blocker_map_init: ArrayVec<Option<u64>, 4096> = ArrayVec::from([None; 4096]);
-    let max_len = blocker_map_init.len();
-    unsafe {
-        // 1024, 2048, or 4096 permutations of rays
-        blocker_map_init.set_len(2usize.pow(table_sz as u32));
-    }
-    assert!(blocker_map_init.len() <= max_len);
+    // let mut blocker_map_init: ArrayVec<Option<u64>, 4096> = ArrayVec::from([None; 4096]);
+    // let max_len = blocker_map_init.len();
+    // unsafe {
+    //     // 1024, 2048, or 4096 permutations of rays
+    //     blocker_map_init.set_len(2usize.pow(table_sz as u32));
+    // }
+    // assert!(blocker_map_init.len() <= max_len);
 
     let mut rng = rand::thread_rng();
     let mut magic: u64 = 0;
-    let mut blocker_map = ArrayVec::new();
+    let mut blocker_map: [u64; 4096] = [0u64; 4096];
+    let mut blocker_map_occupied: [bool; 4096] = [false; 4096];
 
     loop {
         let mut found_magic = true;
-        blocker_map = blocker_map_init.clone();
+        blocker_map_occupied = [false; 4096];
         magic = rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>();
 
         // iteraete over every bitstring up to N bits
@@ -80,14 +83,16 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
                 gen_blocked_diagonal(x, y, blocker_board)
             };
 
-            if let Some(existing_move) = blocker_map[map_index] {
+            if blocker_map_occupied[map_index] {
+                let existing_move = blocker_map[map_index];
                 if existing_move != blocked_ray {
                     found_magic = false;
                     break;
                 }
             } else {
                 // populate blocker map with our current configuration
-                blocker_map[map_index] = Some(blocked_ray);
+                blocker_map[map_index] = blocked_ray;
+                blocker_map_occupied[map_index] = true;
             }
         }
 
@@ -97,8 +102,7 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
 
     }
 
-    let blocker_map = blocker_map.into_iter().map(|opt| opt.unwrap_or(0))
-        .collect::<ArrayVec<u64, 4096>>();
+    let blocker_map = blocker_map.into_iter().collect::<ArrayVec<u64, 4096>>();
 
     (blocker_map, magic)
 }

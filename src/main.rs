@@ -1,5 +1,6 @@
+use arrayvec::ArrayVec;
 use rand::Rng;
-use horsie::magic::*;
+use horsie::{magic::*, movegen::gen_blocked_straight};
 
 fn main() {
     // println!("Horsie v{}", env!("CARGO_PKG_VERSION"));
@@ -22,6 +23,20 @@ fn main() {
     //     let span = gen_blocked_diagonal(x, y, blockers);
     //     let span = gen_blocked_straight(x, y, blockers);
     // }
+
+    // let mut straight_magics: Vec<[ArrayVec<u64, 4096>; 8]> = (0..8).map(|_| std::array::from_fn(|_| ArrayVec::new())).collect();
+    // let mut diagonal_magics: Vec<[ArrayVec<u64, 4096>; 8]> = (0..8).map(|_| std::array::from_fn(|_| ArrayVec::new())).collect();
+
+    // let x = 3;
+    // let y = 4;
+    for x in 0..8 {
+        for y in 0..8 {
+            let (table, magic) = gen_magic_table(x as u8, y as u8, true);
+            // straight_magics[x][y] = table;
+            let (table, magic) = gen_magic_table(x as u8, y as u8, false);
+            // diagonal_magics[x][y] = table;
+        }
+    }
 
     // boo! hello thereeeeee.......
 }
