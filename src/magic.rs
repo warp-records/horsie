@@ -1,5 +1,4 @@
 
-use bitvec::prelude::*;
 use crate::movegen::*;
 use std::cmp::{min, max};
 use arrayvec::*;
@@ -10,6 +9,11 @@ use rand::Rng;
 struct MagicTable<const N: usize> {
     table: [u64; N],
     magic: u64,
+}
+
+/// generate an index into a magic bitboard table, assumes blocker_board is already trimmed
+pub fn gen_table_idx(blocker_board: u64, magic: u64, table_sz: usize) -> usize {
+    (blocker_board.wrapping_mul(magic) >> (64-table_sz)) as usize
 }
 
 pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, u64) {
@@ -40,29 +44,30 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
     // store positions of each bit from the range board
     // which are going to be toggling
     let mut bit_positions = ArrayVec::<u32, 12>::new();
-    let backup = range_board;
     while range_board != 0 {
         let next_pos = range_board.trailing_zeros();
         bit_positions.push(next_pos);
         range_board &= !(1u64 << next_pos);
     }
 
-    // let mut blocker_map_init: ArrayVec<Option<u64>, 4096> = ArrayVec::from([None; 4096]);
-    // let max_len = blocker_map_init.len();
-    // unsafe {
-    //     // 1024, 2048, or 4096 permutations of rays
-    //     blocker_map_init.set_len(2usize.pow(table_sz as u32));
-    // }
-    // assert!(blocker_map_init.len() <= max_len);
+    let mut blocker_map: ArrayVec<u64, 4096> = ArrayVec::from([0; 4096]);
+    let mut blocker_map_occupied: ArrayVec<bool, 4096> = ArrayVec::from([false; 4096]);
+    let max_len = 2usize.pow(table_sz as u32);
+    unsafe {
+        // 1024, 2048, or 4096 permutations of rays
+        blocker_map.set_len(max_len);
+        blocker_map_occupied.set_len(max_len);
+    }
+    assert!(blocker_map.len() <= max_len);
 
     let mut rng = rand::thread_rng();
     let mut magic: u64 = 0;
-    let mut blocker_map: [u64; 4096] = [0u64; 4096];
-    let mut blocker_map_occupied: [bool; 4096] = [false; 4096];
+    // let mut blocker_map: [u64; 4096] = [0u64; 4096];
+    // let mut blocker_map_occupied: [bool; 4096] = [false; 4096];
 
     loop {
         let mut found_magic = true;
-        blocker_map_occupied = [false; 4096];
+        blocker_map_occupied.fill(false);
         magic = rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>();
 
         // iteraete over every bitstring up to N bits
@@ -75,7 +80,8 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
             }
 
             // check for collision at the index our magic gives us
-            let map_index = (blocker_board.wrapping_mul(magic) >> (64-table_sz)) as usize;
+            // let map_index = (blocker_board.wrapping_mul(magic) >> (64-table_sz)) as usize;
+            let map_index = gen_table_idx(blocker_board, magic, table_sz);
 
             let blocked_ray = if orthogonal {
                 gen_blocked_straight(x, y, blocker_board)
@@ -102,7 +108,11 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
 
     }
 
-    let blocker_map = blocker_map.into_iter().collect::<ArrayVec<u64, 4096>>();
+    let blocker_map = blocker_map.into_iter()
+        .zip(blocker_map_occupied)
+        .map(|(val, occupied)| if occupied { val } else { 0 })
+        .collect::<ArrayVec<u64, 4096>>();
+
 
     (blocker_map, magic)
 }

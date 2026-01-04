@@ -231,7 +231,8 @@ mod tests {
 
         let mut rng = StdRng::seed_from_u64(0);
         for _ in 0..1_000 {
-            let rand_board: u64 = rng.random::<u64>();
+            let rand_board: u64 = rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>();
+            println!("{rand_board}");
             let mut blocker_board = rand_board & ray;
 
             blocker_board &= !column_left;
@@ -241,8 +242,10 @@ mod tests {
 
             let table_sz = 10;
 
-            let map_index = (blocker_board.wrapping_mul(magic) >> (64-table_sz)) as usize;
-            assert!(table[map_index] != 0);
+            let expected = gen_blocked_diagonal(2, 4, blocker_board);
+
+            let map_index = gen_table_idx(blocker_board, magic, table_sz);
+            assert_eq!(table[map_index], expected);
         }
     }
 }
