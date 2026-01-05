@@ -228,11 +228,11 @@ mod tests {
     pub fn test_magics_gen() {
 
 
-        let mut rng = rand::rng();//StdRng::seed_from_u64(0);
+        let mut rng = StdRng::seed_from_u64(0);
 
         for _ in 0..100 {
             let rand_board: u64 = rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>();
-            let straight = true;//rng.random::<bool>();
+            let straight = rng.random::<bool>();
 
             let x: u8 = rng.random_range(0..=7);
             let y: u8 = rng.random_range(0..=7);
