@@ -2,7 +2,7 @@
 use crate::movegen::*;
 use std::cmp::{min, max};
 use arrayvec::*;
-use rand::Rng;
+use rand::{SeedableRng, Rng, rngs::StdRng};
 
 // attempt to generate a table of magic bitboards
 // N is either 10, 11, or 12 depending on
@@ -102,10 +102,9 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
     }
     assert!(blocker_map.len() <= max_len);
 
-    let mut rng = rand::thread_rng();
+    // let mut rng = rand::thread_rng();
+    let mut rng = StdRng::seed_from_u64(0);
     let mut magic: u64 = 0;
-    // let mut blocker_map: [u64; 4096] = [0u64; 4096];
-    // let mut blocker_map_occupied: [bool; 4096] = [false; 4096];
 
     loop {
         let mut found_magic = true;
@@ -126,10 +125,26 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
             let map_index = gen_table_idx(blocker_board, magic, table_sz);
 
             let blocked_ray = if orthogonal {
-                gen_blocked_straight(x, y, blocker_board)
+                let rays = gen_straight_rays(x, y);
+                let bs = gen_blocked_straight(x, y, blocker_board);
+                let clipped = clip_straight(rays.0, rays.1);
+
+                // if orthogonal && x == 2 && y == 6 && map_index == 97 {
+                //     println!("rays");
+                //     print_bitboard(rays.0 | rays.1);
+                //     println!("blockers");
+                //     print_bitboard(blocker_board);
+                //     println!("blocked");
+                //     print_bitboard(bs);
+                //     println!("clipped");
+                //     print_bitboard(clipped);
+                // }
+
+                bs & clipped
             } else {
-                gen_blocked_diagonal(x, y, blocker_board)
+                clip_diagonal(gen_blocked_diagonal(x, y, blocker_board))
             };
+
 
             if blocker_map_occupied[map_index] {
                 let existing_move = blocker_map[map_index];

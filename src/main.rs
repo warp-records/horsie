@@ -30,17 +30,19 @@ fn main() {
 
     // let x = 3;
     // let y = 4;
-    for x in 0..8 {
-        for y in 0..8 {
-            let (table, magic) = gen_magic_table(x as u8, y as u8, true);
-            straight_magics[x][y] = table;
-            let (table, magic) = gen_magic_table(x as u8, y as u8, false);
-            diagonal_magics[x][y] = table;
-        }
-    }
+    // for x in 0..8 {
+    //     for y in 0..8 {
+    //         let (table, magic) = gen_magic_table(x as u8, y as u8, true);
+    //         straight_magics[x][y] = table;
+    //         let (table, magic) = gen_magic_table(x as u8, y as u8, false);
+    //         diagonal_magics[x][y] = table;
+    //     }
+    // }
 
 
-    // print_bitboard();
+    // print_bitboard(35321813161472);
+    print_bitboard(7936);
+    print_bitboard(65820);
 
     // boo! hello thereeeeee.......
 }

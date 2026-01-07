@@ -180,6 +180,8 @@ mod tests {
 
         assert_eq!(span, expected);
 
+
+
         let blockers = chessboard!(
             0b_10000001
             0b_00010000
@@ -200,6 +202,32 @@ mod tests {
             0b_00000000
             0b_00000010
             0b_00011101
+        );
+
+        assert_eq!(span, expected);
+
+        // weird edge case that wasn't working for some reason
+        let blockers: u64 = chessboard!(
+            0b_00000000
+            0b_00000000
+            0b_00100000
+            0b_00100000
+            0b_00000000
+            0b_00100000
+            0b_01010110
+            0b_00000000
+        );
+
+        let span: u64 = gen_blocked_straight(2, 6, blockers);
+        let expected: u64 = chessboard!(
+            0b_00000000
+            0b_00000000
+            0b_00000000
+            0b_00000000
+            0b_00000000
+            0b_00100000
+            0b_01010000
+            0b_00100000
         );
 
         assert_eq!(span, expected);
@@ -227,7 +255,6 @@ mod tests {
     #[test]
     pub fn test_magics_gen() {
 
-
         let mut rng = StdRng::seed_from_u64(0);
 
         for _ in 0..100 {
@@ -247,20 +274,25 @@ mod tests {
             };
 
             let mut blocker_board = rand_board & ray;
+            // println!("blockers in test");
+            // print_bitboard(blocker_board);
+            // println!("{:#x}", blocker_board);
 
             let table_sz = calc_shift(x, y);
 
             let expected = if straight {
-                gen_blocked_straight(x, y, blocker_board)
+                let rays = gen_straight_rays(x, y);
+                gen_blocked_straight(x, y, blocker_board) & clip_straight(rays.0, rays.1)
             } else {
-                gen_blocked_diagonal(x, y, blocker_board)
+                clip_diagonal(gen_blocked_diagonal(x, y, blocker_board))
             };
 
             let map_index = gen_table_idx(blocker_board, magic, table_sz);
-            if table[map_index] != expected {
-                print_bitboard(table[map_index]);
-                print_bitboard(expected);
-            }
+            // println!("{map_index}");
+            // if table[map_index] != expected {
+            //     print_bitboard(table[map_index]);
+            //     print_bitboard(expected);
+            // }
             assert_eq!(table[map_index], expected);
         }
     }

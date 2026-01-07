@@ -1,6 +1,8 @@
 
 use std::cmp::{min, max};
 
+use crate::magic::print_bitboard;
+
 const right_down_diag: u64 = 0x8040201008040201;
 const right_up_diag: u64 =    0x102040810204080;
 
@@ -97,14 +99,15 @@ pub fn gen_blocked_diagonal(x: u8, y: u8, other_pieces: u64) -> u64 {
 }
 
 /// generate bitboard of straight ray accounting for blockers, inclusive of blockers and exclusve of origin
+/// returns (vertical, horizontal)
 pub fn gen_straight_rays(x: u8, y: u8) -> (u64, u64) {
     let x = x as i8;
     let y = y as i8;
 
-    let col = shr(column_left, x);
-    let row = shr(row_top, y*8);
+    let vert = shr(column_left, x);
+    let horiz = shr(row_top, y*8);
 
-    (col, row)
+    (vert, horiz)
 }
 
 /// generate bitboard of unbounded straight ray starting at position
@@ -139,7 +142,7 @@ pub fn gen_blocked_straight(x: u8, y: u8, other_pieces: u64) -> u64 {
     if  left_ray == 0 { left_ray = row & left_area; }
 
     let nearest = (other_pieces & right_area).leading_zeros();
-    let mut right_ray = (u64::MAX >> min(nearest+1, 63)) & row & right_area;
+    let mut right_ray = (u64::MAX << 64-min(nearest+1, 63)) & row & right_area;
     if right_ray == 0 { right_ray = row & right_area; }
 
     (top_ray | bottom_ray | left_ray | right_ray) & !piece_bit
