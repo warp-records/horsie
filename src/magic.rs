@@ -1,5 +1,6 @@
 
 use crate::movegen::*;
+use core::panic;
 use std::cmp::{min, max};
 use arrayvec::*;
 use rand::{SeedableRng, Rng, rngs::StdRng};
@@ -80,6 +81,8 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
         let diag = gen_diagonal_ray(x, y);
         clip_diagonal(diag)
     };
+    // remove the piece's position from blocker permutations
+    range_board &= !(0b1 << coords_to_left_shift(x, y));
 
     let table_sz = calc_shift(x, y);
 
@@ -138,6 +141,8 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
                 //     print_bitboard(bs);
                 //     println!("clipped");
                 //     print_bitboard(clipped);
+                //     println!("final");
+                //     print_bitboard(bs & clipped);
                 // }
 
                 bs & clipped
@@ -156,6 +161,13 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
                 // populate blocker map with our current configuration
                 blocker_map[map_index] = blocked_ray;
                 blocker_map_occupied[map_index] = true;
+
+                // if orthogonal && x == 2 && y == 6 && map_index == 97 {
+                //     println!("writing to blocker_map[{}]", map_index);
+                //     println!("{table_sz}");
+                //     print_bitboard(blocker_board);
+                //     println!("{:#x}", blocker_board);
+                // }
             }
         }
 

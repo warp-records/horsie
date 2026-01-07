@@ -288,10 +288,18 @@ mod tests {
             };
 
             let map_index = gen_table_idx(blocker_board, magic, table_sz);
-            // println!("{map_index}");
             // if table[map_index] != expected {
-            //     print_bitboard(table[map_index]);
-            //     print_bitboard(expected);
+                // println!("{map_index}");
+                // print_bitboard(table[map_index]);
+                // print_bitboard(expected);
+                // print_bitboard(0x202000205600);
+                // print_bitboard(0x20000000000000);
+
+
+                // println!("map_index: {}", gen_table_idx(0x202000205600, magic, table_sz));
+                // println!("map_index: {}", gen_table_idx(0x20000000000000, magic, table_sz));
+
+                // println!("{table_sz}");
             // }
             assert_eq!(table[map_index], expected);
         }
