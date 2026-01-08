@@ -3,6 +3,8 @@
 
 Chess engine written in Rust. Hopefully will be strong enough to beat me, but I'll be happy as long as it's not fucking trash
 
+[![codecov](https://codecov.io/gh/warp-records/horsie/branch/master/graph/badge.svg)](https://codecov.io/gh/warp-records/horsie)
+
 # Primary goals:
 - [ ] Move generation
 - [ ] MiniMax AI
