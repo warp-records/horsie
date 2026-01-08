@@ -259,7 +259,7 @@ mod tests {
 
         for _ in 0..100 {
             let rand_board: u64 = rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>();
-            let straight = false;//rng.random::<bool>();
+            let straight = rng.random::<bool>();
 
             let x: u8 = rng.random_range(0..=7);
             let y: u8 = rng.random_range(0..=7);
@@ -274,13 +274,6 @@ mod tests {
             };
 
             let mut blocker_board = rand_board & ray & !coords_to_bb(x, y);
-            // if x == 4 && y == 6 {
-            //     print_bitboard(ray);
-            //     print_bitboard(rand_board);
-            // }
-            // println!("blockers in test");
-            // print_bitboard(blocker_board);
-            // println!("{:#x}", blocker_board);
 
             let table_sz = calc_shift(x, y);
 
@@ -292,13 +285,21 @@ mod tests {
             };
 
             let map_index = gen_table_idx(blocker_board, magic, table_sz);
-            // if table[map_index] != expected {
-            //     print_bitboard(blocker_board);
-            //     println!("{:#x}", blocker_board);
-            //     println!("{map_index}");
-            //     println!("{:?}", table);
-            //     println!("{x}, {y}");
-            // }
+            if table[map_index] != expected {
+                println!("origin: {x}, {y}");
+                println!("ray type: {}", if straight { "straight" } else { "diagonal" });
+                println!("ray:");
+                print_bitboard(ray);
+                println!("blockers board:");
+                println!("hex: {:#x}", blocker_board);
+                print_bitboard(blocker_board);
+                println!("value in table:");
+                println!("hex: {:#x}", table[map_index]);
+                print_bitboard(table[map_index]);
+                println!("expected value:");
+                println!("hex: {:#x}", expected);
+                print_bitboard(expected);
+            }
             assert_eq!(table[map_index], expected);
         }
     }
