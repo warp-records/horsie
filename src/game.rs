@@ -4,27 +4,30 @@ use arrayvec::*;
 #[macro_export]
 macro_rules! chessboard {
     ($line0:tt $line1:tt $line2:tt $line3:tt $line4:tt $line5:tt $line6:tt $line7:tt) => {
-        ($line0 << 56) |
-        ($line1 << 48) |
-        ($line2 << 40) |
-        ($line3 << 32) |
-        ($line4 << 24) |
-        ($line5 << 16) |
-        ($line6 <<  8) |
-        ($line7 <<  0)
-    }
+        ($line0 << 56)
+            | ($line1 << 48)
+            | ($line2 << 40)
+            | ($line3 << 32)
+            | ($line4 << 24)
+            | ($line5 << 16)
+            | ($line6 << 8)
+            | ($line7 << 0)
+    };
 }
 
 #[derive(PartialEq)]
-enum Color { Black, White }
+enum Color {
+    Black,
+    White,
+}
 
 enum PieceType {
-   King(Color),
-   Queen(Color),
-   Rook(Color),
-   Bishop(Color),
-   Horses(Color),
-   Pawn(Color, bool)
+    King(Color),
+    Queen(Color),
+    Rook(Color),
+    Bishop(Color),
+    Horses(Color),
+    Pawn(Color, bool),
 }
 
 pub struct GameState {
@@ -52,24 +55,29 @@ pub struct ColorSet {
     threats: u64,
 }
 
-
-
 impl GameState {
     // (moves list, threat lines)
     pub fn king_moves(&self) -> (ArrayVec<u64, 8>, u64) {
         let mut moves = ArrayVec::new();
 
-        let king_bb = if self.turn == Color::Black { self.black.king } else { self.white.king };
-        let opponent_threats = if self.turn == Color::Black { self.white.threats } else { self.black.threats };
+        let king_bb = if self.turn == Color::Black {
+            self.black.king
+        } else {
+            self.white.king
+        };
+        let opponent_threats = if self.turn == Color::Black {
+            self.white.threats
+        } else {
+            self.black.threats
+        };
 
         let mut move_mask: u64 = 0xE0A0E00000000000;
         let move_mask_pos = 9;
         let self_threat: u64 = if king_bb.leading_zeros() > move_mask_pos {
             move_mask >> king_bb.leading_zeros() - move_mask_pos
         } else {
-            move_mask >>  move_mask_pos - king_bb.leading_zeros()
+            move_mask >> move_mask_pos - king_bb.leading_zeros()
         };
-
 
         // up left
         moves.push(king_bb << (8 + 1));
@@ -84,14 +92,13 @@ impl GameState {
         moves.push(king_bb >> 8);
         moves.push(king_bb >> (8 + 1));
 
-        moves.retain(|bb| (*bb&opponent_threats == 0));
+        moves.retain(|bb| (*bb & opponent_threats == 0));
         (moves, self_threat)
     }
 
     // Return order is from top to bottom, left to right formatted as (original_pos_bitboard, new_pos_bitboard)
     // implement pawn promotion later
     // pub fn gen_pawn_moves() -> ArrayVec<(u64, 64), 24> {
-
 
     //     ArrayVec::new()
     // }

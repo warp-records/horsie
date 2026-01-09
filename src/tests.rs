@@ -1,14 +1,11 @@
-
-
 #[cfg(test)]
 mod tests {
 
+    use crate::chessboard;
     use crate::game::*;
     use crate::magic::*;
     use crate::movegen::*;
-    use crate::chessboard;
-    use rand::rand_core::block;
-    use rand::{SeedableRng, Rng, rngs::StdRng};
+    use rand::{rngs::StdRng, Rng, SeedableRng};
 
     #[test]
     pub fn diagonals_simple() {
@@ -43,7 +40,6 @@ mod tests {
 
     #[test]
     pub fn straight_simple() {
-
         let span: u64 = gen_straight_ray(6, 3);
         let expected = chessboard!(
             0b_00000010
@@ -75,7 +71,6 @@ mod tests {
 
     #[test]
     pub fn diagonal_blockers_simple() {
-
         let blockers = chessboard!(
             0b_00000000
             0b_00000000
@@ -103,7 +98,6 @@ mod tests {
 
     #[test]
     pub fn diagonal_blockers_complex() {
-
         let blockers = chessboard!(
             0b_10001000
             0b_00001100
@@ -155,7 +149,6 @@ mod tests {
 
     #[test]
     pub fn straight_blockers_simple() {
-
         let blockers = chessboard!(
             0b_00000000
             0b_00000000
@@ -179,8 +172,6 @@ mod tests {
         );
 
         assert_eq!(span, expected);
-
-
 
         let blockers = chessboard!(
             0b_10000001
@@ -233,10 +224,8 @@ mod tests {
         assert_eq!(span, expected);
     }
 
-
     #[test]
     pub fn knight() {
-
         let span: u64 = gen_knight(6, 4);
         let expected: u64 = chessboard!(
             0b_00000000
@@ -254,7 +243,6 @@ mod tests {
 
     #[test]
     pub fn magics_gen() {
-
         let mut rng = StdRng::seed_from_u64(0);
 
         for _ in 0..100 {
@@ -281,7 +269,6 @@ mod tests {
             } else {
                 clip_diagonal(gen_blocked_diagonal(x, y, blocker_board))
             };
-
 
             // let map_index = gen_table_idx(blocker_board, magic, table_sz);
             // if table[map_index] != expected {

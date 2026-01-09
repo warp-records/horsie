@@ -1,7 +1,6 @@
-
 use crate::movegen::*;
 use arrayvec::*;
-use rand::{SeedableRng, Rng, rngs::StdRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 
 // attempt to generate a table of magic bitboards
 #[derive(Default)]
@@ -26,11 +25,9 @@ impl MagicTable {
 
     /// Generate an index into a magic bitboard table, assumes blocker_board is already trimmed
     pub fn gen_table_idx(blocker_board: u64, magic: u64, index_bits: u8) -> usize {
-        (blocker_board.wrapping_mul(magic) >> (64-index_bits)) as usize
+        (blocker_board.wrapping_mul(magic) >> (64 - index_bits)) as usize
     }
 }
-
-
 
 /// remove redundant ranks and files for magic bitboard lookup
 /// returns (clipped_board, num_edges_clipped)
@@ -59,7 +56,6 @@ pub fn clip_range_board(x: u8, y: u8, mut range_board: u64) -> (u64, usize) {
 
 /// remove edges from diagonal ray
 pub fn clip_diagonal(mut range_board: u64) -> u64 {
-
     range_board &= !column_left;
     range_board &= !column_right;
     range_board &= !row_top;
@@ -88,8 +84,8 @@ pub fn calc_shift(x: u8, y: u8) -> u8 {
 }
 
 /// generate a lookup table of bitboards representing the blocked movespace of a piece, and a magic value for indexing
-pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> MagicTable {
-    let mut range_board = if orthogonal {
+pub fn gen_magic_table(x: u8, y: u8, straight: bool) -> MagicTable {
+    let mut range_board = if straight {
         let (horiz, vert) = gen_straight_rays(x, y);
         clip_straight(horiz, vert)
     } else {
@@ -120,7 +116,6 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> MagicTable {
     }
     assert!(blocker_map.len() <= max_len);
 
-    // let mut rng = rand::thread_rng();
     let mut rng = StdRng::seed_from_u64(0);
     let mut magic: u64 = 0;
 
@@ -134,7 +129,7 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> MagicTable {
             // generate permutation of blockers along ray using current bitstring
             let mut blocker_board: u64 = 0;
             for tbl_idx in 0..bit_positions.len() {
-                let nth_bit  = (bitstr & (1u64 << tbl_idx)) >> tbl_idx;
+                let nth_bit = (bitstr & (1u64 << tbl_idx)) >> tbl_idx;
                 blocker_board |= nth_bit << (bit_positions[tbl_idx]);
             }
 
@@ -142,12 +137,12 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> MagicTable {
             // let map_index = (blocker_board.wrapping_mul(magic) >> (64-index_bits)) as usize;
             let map_index = MagicTable::gen_table_idx(blocker_board, magic, index_bits);
 
-            let blocked_ray = if orthogonal {
+            let blocked_ray = if straight {
                 let rays = gen_straight_rays(x, y);
-                let bs = gen_blocked_straight(x, y, blocker_board);
+                let blocked_straight = gen_blocked_straight(x, y, blocker_board);
                 let clipped = clip_straight(rays.0, rays.1);
 
-                bs & clipped
+                blocked_straight & clipped
             } else {
                 clip_diagonal(gen_blocked_diagonal(x, y, blocker_board))
             };
@@ -162,21 +157,19 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> MagicTable {
                 // populate blocker map with our current configuration
                 blocker_map[map_index] = blocked_ray;
                 blocker_map_occupied[map_index] = true;
-
             }
         }
 
         if found_magic {
             break;
         }
-
     }
 
-    let blocker_map = blocker_map.into_iter()
+    let blocker_map = blocker_map
+        .into_iter()
         .zip(blocker_map_occupied)
         .map(|(val, occupied)| if occupied { val } else { 0 })
         .collect::<ArrayVec<u64, 4096>>();
-
 
     MagicTable {
         table: blocker_map,
@@ -192,7 +185,7 @@ pub fn print_bitboard(bb: u64) {
     }
     println!();
     for rank in (0..8).rev() {
-        print!("{} ", 7-rank);
+        print!("{} ", 7 - rank);
         for file in (0..8).rev() {
             let square = rank * 8 + file;
             if (bb >> square) & 1 == 1 {
