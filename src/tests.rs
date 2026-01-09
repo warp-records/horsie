@@ -264,7 +264,7 @@ mod tests {
             let x: u8 = rng.random_range(0..=7);
             let y: u8 = rng.random_range(0..=7);
 
-            let (table, magic) = gen_magic_table(x, y, straight);
+            let magic_table = gen_magic_table(x, y, straight);
 
             let ray = if straight {
                 let ray = gen_straight_rays(x, y);
@@ -275,8 +275,6 @@ mod tests {
 
             let blocker_board = rand_board & ray & !coords_to_bb(x, y);
 
-            let table_sz = calc_shift(x, y);
-
             let expected = if straight {
                 let rays = gen_straight_rays(x, y);
                 gen_blocked_straight(x, y, blocker_board) & clip_straight(rays.0, rays.1)
@@ -284,7 +282,8 @@ mod tests {
                 clip_diagonal(gen_blocked_diagonal(x, y, blocker_board))
             };
 
-            let map_index = gen_table_idx(blocker_board, magic, table_sz);
+
+            // let map_index = gen_table_idx(blocker_board, magic, table_sz);
             // if table[map_index] != expected {
             //     println!("origin: {x}, {y}");
             //     println!("ray type: {}", if straight { "straight" } else { "diagonal" });
@@ -300,7 +299,7 @@ mod tests {
             //     println!("hex: {:#x}", expected);
             //     print_bitboard(expected);
             // }
-            assert_eq!(table[map_index], expected);
+            assert_eq!(magic_table.get_ray(blocker_board), Some(expected));
         }
     }
 }

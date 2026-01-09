@@ -1,21 +1,36 @@
 
 use crate::movegen::*;
-use core::panic;
-use std::cmp::{min, max};
 use arrayvec::*;
 use rand::{SeedableRng, Rng, rngs::StdRng};
 
 // attempt to generate a table of magic bitboards
-// N is either 10, 11, or 12 depending on
-struct MagicTable<const N: usize> {
-    table: [u64; N],
+#[derive(Default)]
+pub struct MagicTable {
+    table: ArrayVec<u64, 4096>,
     magic: u64,
+    // either 10, 11, or 12
+    index_bits: u8,
 }
 
-/// generate an index into a magic bitboard table, assumes blocker_board is already trimmed
-pub fn gen_table_idx(blocker_board: u64, magic: u64, table_sz: usize) -> usize {
-    (blocker_board.wrapping_mul(magic) >> (64-table_sz)) as usize
+impl MagicTable {
+    /// Given a set of blockers, return a ray of the movespan in that space.
+    /// Type and origin of ray is computed while generating table.
+    pub fn get_ray(&self, blocker_board: u64) -> Option<u64> {
+        let ray = self.table[Self::gen_table_idx(blocker_board, self.magic, self.index_bits)];
+        if ray != 0 {
+            Some(ray)
+        } else {
+            None
+        }
+    }
+
+    /// Generate an index into a magic bitboard table, assumes blocker_board is already trimmed
+    pub fn gen_table_idx(blocker_board: u64, magic: u64, index_bits: u8) -> usize {
+        (blocker_board.wrapping_mul(magic) >> (64-index_bits)) as usize
+    }
 }
+
+
 
 /// remove redundant ranks and files for magic bitboard lookup
 /// returns (clipped_board, num_edges_clipped)
@@ -58,7 +73,7 @@ pub fn clip_straight(vertical: u64, horizontal: u64) -> u64 {
     (vertical & !row_top & !row_bottom) | (horizontal & !column_left & !column_right)
 }
 
-pub fn calc_shift(x: u8, y: u8) -> usize {
+pub fn calc_shift(x: u8, y: u8) -> u8 {
     let mut shift_amt = 10;
 
     if x == 0 || x == 7 {
@@ -73,7 +88,7 @@ pub fn calc_shift(x: u8, y: u8) -> usize {
 }
 
 /// generate a lookup table of bitboards representing the blocked movespace of a piece, and a magic value for indexing
-pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, u64) {
+pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> MagicTable {
     let mut range_board = if orthogonal {
         let (horiz, vert) = gen_straight_rays(x, y);
         clip_straight(horiz, vert)
@@ -84,7 +99,7 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
     // remove the piece's position from blocker permutations
     range_board &= !coords_to_bb(x, y);
 
-    let table_sz = calc_shift(x, y);
+    let index_bits = calc_shift(x, y);
 
     // store positions of each bit from the range board
     // which are going to be toggling
@@ -97,7 +112,7 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
 
     let mut blocker_map: ArrayVec<u64, 4096> = ArrayVec::from([0; 4096]);
     let mut blocker_map_occupied: ArrayVec<bool, 4096> = ArrayVec::from([false; 4096]);
-    let max_len = 2usize.pow(table_sz as u32);
+    let max_len = 2usize.pow(index_bits as u32);
     unsafe {
         // 1024, 2048, or 4096 permutations of rays
         blocker_map.set_len(max_len);
@@ -124,8 +139,8 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
             }
 
             // check for collision at the index our magic gives us
-            // let map_index = (blocker_board.wrapping_mul(magic) >> (64-table_sz)) as usize;
-            let map_index = gen_table_idx(blocker_board, magic, table_sz);
+            // let map_index = (blocker_board.wrapping_mul(magic) >> (64-index_bits)) as usize;
+            let map_index = MagicTable::gen_table_idx(blocker_board, magic, index_bits);
 
             let blocked_ray = if orthogonal {
                 let rays = gen_straight_rays(x, y);
@@ -163,7 +178,11 @@ pub fn gen_magic_table(x: u8, y: u8, orthogonal: bool) -> (ArrayVec<u64, 4096>, 
         .collect::<ArrayVec<u64, 4096>>();
 
 
-    (blocker_map, magic)
+    MagicTable {
+        table: blocker_map,
+        magic: magic,
+        index_bits: index_bits,
+    }
 }
 
 pub fn print_bitboard(bb: u64) {

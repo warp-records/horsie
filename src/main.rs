@@ -25,24 +25,23 @@ fn main() {
     // }
 
     // this looks ugly as fuck
-    let mut straight_magics: Vec<[ArrayVec<u64, 4096>; 8]> = (0..8).map(|_| std::array::from_fn(|_| ArrayVec::new())).collect();
-    let mut diagonal_magics: Vec<[ArrayVec<u64, 4096>; 8]> = (0..8).map(|_| std::array::from_fn(|_| ArrayVec::new())).collect();
-
-    // let x = 3;
-    // let y = 4;
-    // for x in 0..8 {
-    //     for y in 0..8 {
-    //         let (table, magic) = gen_magic_table(x as u8, y as u8, true);
-    //         straight_magics[x][y] = table;
-    //         let (table, magic) = gen_magic_table(x as u8, y as u8, false);
-    //         diagonal_magics[x][y] = table;
-    //     }
-    // }
-
-
-    // print_bitboard(35321813161472);
-    print_bitboard(7936);
-    print_bitboard(65820);
+    generate_magics();
 
     // boo! hello thereeeeee.......
+}
+
+pub fn generate_magics() -> (Vec<[MagicTable; 8]>, Vec<[MagicTable; 8]>) {
+    let mut straight_magics: Vec<[MagicTable; 8]> = (0..8).map(|_| std::array::from_fn(|_| MagicTable::default())).collect();
+    let mut diagonal_magics: Vec<[MagicTable; 8]> = (0..8).map(|_| std::array::from_fn(|_| MagicTable::default())).collect();
+
+    for x in 0..8 {
+        for y in 0..8 {
+            let table = gen_magic_table(x as u8, y as u8, true);
+            straight_magics[x][y] = table;
+            let table = gen_magic_table(x as u8, y as u8, false);
+            diagonal_magics[x][y] = table;
+        }
+    }
+
+    (straight_magics, diagonal_magics)
 }
