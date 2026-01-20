@@ -134,7 +134,7 @@ impl GameState {
         );
 
         const BISHOPS_INIT: u64 = chessboard!(
-            0b_00101000
+            0b_00100100
             0b_00000000
             0b_00000000
             0b_00000000
@@ -216,13 +216,11 @@ impl GameState {
             let mut col: u8 = 0;
 
             for ch in row_contents.chars() {
-                if col > 7 {
-                    return Err(());
-                }
-
                 let color: &mut u64 = if ch.is_lowercase() { &mut black } else { &mut white };
-                if let Ok(space) = u8::try_from(ch) {
-                    col += space;
+
+                if col > 7 { return Err(()); }
+                if let Some(space) = ch.to_digit(10) {
+                    col += space as u8;
                     continue;
                 }
 
@@ -236,6 +234,9 @@ impl GameState {
                     'r' => {
                         rooks |= coords_to_bb(col, row);
                     },
+                    'b' => {
+                        bishops |= coords_to_bb(col, row);
+                    },
                     'n' => {
                         knights |= coords_to_bb(col, row);
                     },
@@ -248,18 +249,15 @@ impl GameState {
                 }
 
                 *color |= coords_to_bb(col, row);
+                col += 1;
             }
 
-            if col != 8 {
-                return Err(());
-            }
+            if col != 8 { return Err(()); }
 
             row += 1;
         }
 
-        if row != 8 {
-            return Err(())
-        }
+        if row != 8 { return Err(()) }
 
         Ok(GameState {
             turn: Color::White,
@@ -430,6 +428,45 @@ impl GameState {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    pub fn import_fen() {
+        let gamestate = GameState::from_fen("r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1");
+        assert!(gamestate.is_ok());
+
+        let gamestate = GameState::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+        assert!(gamestate.is_ok());
+
+        let gamestate = gamestate.unwrap();
+        let normal_setup = GameState::new();
+        assert!(gamestate.black == normal_setup.black);
+        assert!(gamestate.white == normal_setup.white);
+        assert!(gamestate.kings == normal_setup.kings);
+        assert!(gamestate.queens == normal_setup.queens);
+        assert!(gamestate.rooks == normal_setup.rooks);
+        assert!(gamestate.bishops == normal_setup.bishops);
+        assert!(gamestate.knights == normal_setup.knights);
+        assert!(gamestate.pawns == normal_setup.pawns);
+
+
+        let gamestate = GameState::from_fen("8/8/8/4p1K1/2k1P3/8/8/8");
+        assert!(gamestate.is_ok());
+
+        let gamestate = GameState::from_fen("8/5k2/3p4/1p1Pp2p/pP2Pp1P/P4P1K/8/8");
+        assert!(gamestate.is_ok());
+
+        let gamestate = GameState::from_fen("rnbqknr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+        assert!(gamestate.is_err());
+
+        let gamestate = GameState::from_fen("rnbqknr/pppppppp/9/8/8/8/PPPPPPPP/RNBQKBNR");
+        assert!(gamestate.is_err());
+
+        let gamestate = GameState::from_fen("rnbqknr/pppppppp/9/8/8/8/PPPPPPPPRNBQKBNR");
+        assert!(gamestate.is_err());
+
+        let gamestate = GameState::from_fen("rnbqknX/pppppppp/9/8/8/8/PPPPPPPPRNBQKBNR");
+        assert!(gamestate.is_err());
+    }
 
     #[test]
     pub fn rook_moves() {

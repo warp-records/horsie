@@ -23,8 +23,11 @@ fn main() {
     // }
 
     // this looks ugly as fuck
-    let mut game = GameState::new();
-    game.init_magics();
+    // let mut game = GameState::new();
+    // game.init_magics();
+
+    print_bitboard(2594073385365405732);
+    print_bitboard(2882303761517117476);
 
     // generate_magics();
 
