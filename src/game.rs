@@ -48,13 +48,13 @@ pub struct GameState {
     bishops: u64,
     knights: u64,
     pawns: u64,
+    /// positions of all pieces of a given color
+    black: u64,
+    white: u64,
     // bitboard representing any king move, en passe
     en_passe: u64,
     short_castle: bool,
     long_castle: bool,
-    /// positions of all pieces of a given color
-    black: u64,
-    white: u64,
     // mask of threat lines of all enemy pieces generated at the beginning of each turn
     // idk if I need this actually
     // threats: u64,
@@ -187,12 +187,97 @@ impl GameState {
             knights: KNIGHTS_INIT,
             bishops: BISHOPS_INIT,
             pawns: PAWNS_INIT,
+            black: BLACK_SIDE,
+            white: WHITE_SIDE,
             en_passe: 0,
             short_castle: true,
             long_castle: true,
-            black: BLACK_SIDE,
-            white: WHITE_SIDE,
         }
+    }
+
+    // primarily used for tests
+    pub fn from_fen(fen: &str) -> Result<Self, ()> {
+
+        let mut kings: u64 = 0;
+        let mut queens: u64 = 0;
+        let mut rooks: u64 = 0;
+        let mut bishops: u64 = 0;
+        let mut knights: u64 = 0;
+        let mut pawns: u64 = 0;
+        let mut black: u64 = 0;
+        let mut white: u64 = 0;
+
+        let mut row: u8 = 0;
+
+        for row_contents in fen.split('/') {
+            if row > 7 {
+                return Err(())
+            }
+            let mut col: u8 = 0;
+
+            for ch in row_contents.chars() {
+                if col > 7 {
+                    return Err(());
+                }
+
+                let color: &mut u64 = if ch.is_lowercase() { &mut black } else { &mut white };
+                if let Ok(space) = u8::try_from(ch) {
+                    col += space;
+                    continue;
+                }
+
+                match ch.to_ascii_lowercase() {
+                    'k' => {
+                        kings |= coords_to_bb(col, row);
+                    },
+                    'q' => {
+                        queens |= coords_to_bb(col, row);
+                    },
+                    'r' => {
+                        rooks |= coords_to_bb(col, row);
+                    },
+                    'n' => {
+                        knights |= coords_to_bb(col, row);
+                    },
+                    'p' => {
+                        pawns |= coords_to_bb(col, row);
+                    },
+                    _ => {
+                        return Err(())
+                    }
+                }
+
+                *color |= coords_to_bb(col, row);
+            }
+
+            if col != 8 {
+                return Err(());
+            }
+
+            row += 1;
+        }
+
+        if row != 8 {
+            return Err(())
+        }
+
+        Ok(GameState {
+            turn: Color::White,
+            magics_straight: None,
+            magics_diagonal: None,
+            kings,
+            queens,
+            rooks,
+            bishops,
+            knights,
+            pawns,
+            black,
+            white,
+            // handle proper initialization of these special fields later
+            en_passe: 0u64,
+            short_castle: true,
+            long_castle: true,
+        })
     }
 
 
@@ -350,6 +435,7 @@ mod tests {
     pub fn rook_moves() {
         let mut game = GameState::new();
         game.init_magics();
+        println!("{:?}", game.rook_moves());
 
     }
 }
