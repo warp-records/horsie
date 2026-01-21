@@ -399,7 +399,7 @@ impl GameState {
             let shift = rooks_bb.leading_zeros();
             let src = shift_to_coords(shift as u8);
 
-            if shift == 64 {
+            if rooks_bb == 0 {
                 break;
             }
 

@@ -134,25 +134,25 @@ pub fn gen_blocked_straight(x: u8, y: u8, other_pieces: u64) -> u64 {
     let left_area = !right_area << 1 & vertical_zeros_right;
 
     let nearest = (other_pieces & top_area).trailing_zeros();
-    let mut top_ray = (u64::MAX >> 64 - min(nearest + 1, 63)) & col & top_area;
+    let mut top_ray = (u64::MAX >> 64 - min(nearest + 1, 64)) & col & top_area;
     if top_ray == 0 {
         top_ray = col & top_area;
     }
 
     let nearest = (other_pieces & bottom_area).trailing_zeros();
-    let mut bottom_ray = (u64::MAX << min(nearest - 1, 63)) & col & bottom_area;
+    let mut bottom_ray = (u64::MAX << min(nearest - 1, 64)) & col & bottom_area;
     if bottom_ray == 0 {
         bottom_ray = col & bottom_area;
     }
 
     let nearest = (other_pieces & left_area).trailing_zeros();
-    let mut left_ray = (u64::MAX >> 64 - min(nearest + 1, 63)) & row & left_area;
+    let mut left_ray = (u64::MAX >> 64 - min(nearest + 1, 64)) & row & left_area;
     if left_ray == 0 {
         left_ray = row & left_area;
     }
 
     let nearest = (other_pieces & right_area).leading_zeros();
-    let mut right_ray = (u64::MAX << 64 - min(nearest + 1, 63)) & row & right_area;
+    let mut right_ray = (u64::MAX << 64 - min(nearest + 1, 64)) & row & right_area;
     if right_ray == 0 {
         right_ray = row & right_area;
     }
