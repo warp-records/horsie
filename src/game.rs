@@ -590,4 +590,38 @@ mod tests {
 
         assert_eq!(moves, expected);
     }
+
+    #[test]
+    pub fn bishop_moves() {
+        // Position with bishops at d3 and c1
+        let mut game = GameState::try_from_fen("r2qkb1r/ppp2ppp/2n2n2/4p3/3P4/2PB1R2/PP4PP/RNBQ2K1").unwrap();
+        game.init_magics();
+
+        let mut expected = vec![
+            // bishop at c1 (2, 0)
+            Move::new((2, 0), (3, 1)), // d2
+            Move::new((2, 0), (4, 2)), // e3
+            Move::new((2, 0), (5, 3)), // f4
+            Move::new((2, 0), (6, 4)), // g5
+            Move::new((2, 0), (7, 5)), // h6
+
+            // bishop at d3 (3, 2)
+            Move::new((3, 2), (2, 1)), // c4
+            Move::new((3, 2), (2, 3)), // c4
+            Move::new((3, 2), (1, 4)), // b5
+            Move::new((3, 2), (0, 5)), // a6
+            Move::new((3, 2), (4, 3)), // e4
+            Move::new((3, 2), (5, 4)), // f5
+            Move::new((3, 2), (6, 5)), // g6
+            Move::new((3, 2), (7, 6)), // h7
+            Move::new((3, 2), (4, 1)), // e2
+            Move::new((3, 2), (5, 0)), // f1
+        ];
+        expected.sort();
+
+        let mut moves: Vec<Move> = game.bishop_moves().to_vec();
+        moves.sort();
+
+        assert_eq!(moves, expected);
+    }
 }
