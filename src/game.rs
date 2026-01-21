@@ -26,7 +26,7 @@ enum Color {
     White,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum PieceType {
     King,
     Queen,
@@ -60,7 +60,7 @@ pub struct GameState {
     // threats: u64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Move {
     src: (u8, u8),
     dest: (u8, u8),
@@ -196,7 +196,8 @@ impl GameState {
     }
 
     // primarily used for tests
-    pub fn from_fen(fen: &str) -> Result<Self, ()> {
+    // TODO: read castling,
+    pub fn try_from_fen(fen: &str) -> Result<Self, ()> {
 
         let mut kings: u64 = 0;
         let mut queens: u64 = 0;
@@ -387,7 +388,7 @@ impl GameState {
 
     // ignore whether or not we're in check for now
     // castling moves implemented in king moves
-    pub fn rook_moves(&self) -> ArrayVec<Move, 14> {
+    pub fn rook_moves(&self) -> ArrayVec<Move, 28> {
         let mut moveset = ArrayVec::new();
 
         let self_bb = self.self_bb();
@@ -431,10 +432,10 @@ mod tests {
 
     #[test]
     pub fn import_fen() {
-        let gamestate = GameState::from_fen("r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1");
+        let gamestate = GameState::try_from_fen("r1bk3r/p2pBpNp/n4n2/1p1NP2P/6P1/3P4/P1P1K3/q5b1");
         assert!(gamestate.is_ok());
 
-        let gamestate = GameState::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+        let gamestate = GameState::try_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
         assert!(gamestate.is_ok());
 
         let gamestate = gamestate.unwrap();
@@ -449,30 +450,82 @@ mod tests {
         assert!(gamestate.pawns == normal_setup.pawns);
 
 
-        let gamestate = GameState::from_fen("8/8/8/4p1K1/2k1P3/8/8/8");
+        let gamestate = GameState::try_from_fen("8/8/8/4p1K1/2k1P3/8/8/8");
         assert!(gamestate.is_ok());
 
-        let gamestate = GameState::from_fen("8/5k2/3p4/1p1Pp2p/pP2Pp1P/P4P1K/8/8");
+        let gamestate = GameState::try_from_fen("8/5k2/3p4/1p1Pp2p/pP2Pp1P/P4P1K/8/8");
         assert!(gamestate.is_ok());
 
-        let gamestate = GameState::from_fen("rnbqknr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+        let gamestate = GameState::try_from_fen("rnbqknr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
         assert!(gamestate.is_err());
 
-        let gamestate = GameState::from_fen("rnbqknr/pppppppp/9/8/8/8/PPPPPPPP/RNBQKBNR");
+        let gamestate = GameState::try_from_fen("rnbqknr/pppppppp/9/8/8/8/PPPPPPPP/RNBQKBNR");
         assert!(gamestate.is_err());
 
-        let gamestate = GameState::from_fen("rnbqknr/pppppppp/9/8/8/8/PPPPPPPPRNBQKBNR");
+        let gamestate = GameState::try_from_fen("rnbqknr/pppppppp/9/8/8/8/PPPPPPPPRNBQKBNR");
         assert!(gamestate.is_err());
 
-        let gamestate = GameState::from_fen("rnbqknX/pppppppp/9/8/8/8/PPPPPPPPRNBQKBNR");
+        let gamestate = GameState::try_from_fen("rnbqknX/pppppppp/9/8/8/8/PPPPPPPPRNBQKBNR");
         assert!(gamestate.is_err());
     }
 
     #[test]
     pub fn rook_moves() {
-        let mut game = GameState::new();
+        // starting board except with a rook at 4, 3
+        let mut game = GameState::try_from_fen("rnbqkbnr/pppppppp/8/4R3/8/8/PPPPPPPP/RNBQKBN1").unwrap();
         game.init_magics();
-        println!("{:?}", game.rook_moves());
+
+        let mut expected = vec![
+            Move::new((4, 3), (4, 1)),
+            Move::new((4, 3), (4, 2)),
+            Move::new((4, 3), (4, 4)),
+            Move::new((4, 3), (4, 5)),
+            Move::new((4, 3), (0, 3)),
+            Move::new((4, 3), (1, 3)),
+            Move::new((4, 3), (2, 3)),
+            Move::new((4, 3), (3, 3)),
+            Move::new((4, 3), (5, 3)),
+            Move::new((4, 3), (6, 3)),
+            Move::new((4, 3), (7, 3))
+        ];
+        expected.sort();
+
+        let mut moves: Vec<Move> = game.rook_moves().to_vec();
+        moves.sort();
+
+        assert_eq!(moves, expected);
+
+        // more complex position
+        let mut game = GameState::try_from_fen("2r2r2/pk4pp/1p6/P1p1B3/8/2R2n2/2P2P1P/1R3K2").unwrap();
+        game.init_magics();
+
+        let mut expected = vec![
+            // rook at (1, 7)
+            Move::new((1, 7), (0, 7)),
+            Move::new((1, 7), (2, 7)),
+            Move::new((1, 7), (3, 7)),
+            Move::new((1, 7), (4, 7)),
+            Move::new((1, 7), (1, 6)),
+            Move::new((1, 7), (1, 5)),
+            Move::new((1, 7), (1, 4)),
+            Move::new((1, 7), (1, 3)),
+            Move::new((1, 7), (1, 2)),
+
+            // rook at (2, 5)
+            Move::new((2, 5), (0, 5)),
+            Move::new((2, 5), (1, 5)),
+            Move::new((2, 5), (3, 5)),
+            Move::new((2, 5), (4, 5)),
+            Move::new((2, 5), (5, 5)),
+            Move::new((2, 5), (2, 4)),
+            Move::new((2, 5), (2, 3)),
+        ];
+        expected.sort();
+
+        let mut moves: Vec<Move> = game.rook_moves().to_vec();
+        moves.sort();
+
+        assert_eq!(moves, expected);
 
     }
 }

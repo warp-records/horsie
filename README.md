@@ -1,5 +1,5 @@
 
-# Horsie
+# Knightmare
 
 Chess engine written in Rust. Hopefully will be strong enough to beat me, but I'll be happy as long as it's not fucking trash
 

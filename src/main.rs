@@ -1,5 +1,5 @@
 use arrayvec::ArrayVec;
-use horsie::{chessboard, game::GameState, magic::*, movegen::*};
+use knightmare::{chessboard, game::GameState, magic::*, movegen::*};
 use rand::Rng;
 
 fn main() {
@@ -26,8 +26,6 @@ fn main() {
     // let mut game = GameState::new();
     // game.init_magics();
 
-    print_bitboard(2594073385365405732);
-    print_bitboard(2882303761517117476);
 
     // generate_magics();
 
