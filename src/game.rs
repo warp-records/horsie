@@ -599,23 +599,23 @@ mod tests {
 
         let mut expected = vec![
             // bishop at c1 (2, 0)
-            Move::new((2, 0), (3, 1)), // d2
-            Move::new((2, 0), (4, 2)), // e3
-            Move::new((2, 0), (5, 3)), // f4
-            Move::new((2, 0), (6, 4)), // g5
-            Move::new((2, 0), (7, 5)), // h6
+            Move::new((2, 7), (3, 6)), // d2
+            Move::new((2, 7), (4, 5)), // e3
+            Move::new((2, 7), (5, 4)), // f4
+            Move::new((2, 7), (6, 3)), // g5
+            Move::new((2, 7), (7, 2)), // h6
 
             // bishop at d3 (3, 2)
-            Move::new((3, 2), (2, 1)), // c4
-            Move::new((3, 2), (2, 3)), // c4
-            Move::new((3, 2), (1, 4)), // b5
-            Move::new((3, 2), (0, 5)), // a6
-            Move::new((3, 2), (4, 3)), // e4
-            Move::new((3, 2), (5, 4)), // f5
-            Move::new((3, 2), (6, 5)), // g6
-            Move::new((3, 2), (7, 6)), // h7
-            Move::new((3, 2), (4, 1)), // e2
-            Move::new((3, 2), (5, 0)), // f1
+            Move::new((3, 5), (2, 6)), // c4
+            Move::new((3, 5), (2, 4)), // c4
+            Move::new((3, 5), (1, 3)), // b5
+            Move::new((3, 5), (0, 2)), // a6
+            Move::new((3, 5), (4, 4)), // e4
+            Move::new((3, 5), (5, 3)), // f5
+            Move::new((3, 5), (6, 2)), // g6
+            Move::new((3, 5), (7, 1)), // h7
+            Move::new((3, 5), (4, 6)), // e2
+            Move::new((3, 5), (5, 7)), // f1
         ];
         expected.sort();
 
