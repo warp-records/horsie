@@ -519,7 +519,14 @@ impl GameState {
         move_board = shr(move_board, king_rshift-MOVE_BOARD_RSHIFT);
         move_board &= !self.self_bb();
 
-        let moveset = Self::moves_from_bb::<10>(move_board, right_shift_to_coords(king_rshift as u8));
+        let coords = right_shift_to_coords(king_rshift as u8);
+        if coords.0 == 0 {
+            move_board &= !COLUMN_RIGHT;
+        } else if coords.0 == 7 {
+            move_board &= !COLUMN_LEFT;
+        }
+
+        let moveset = Self::moves_from_bb::<10>(move_board, coords);
 
         moveset
     }
@@ -762,4 +769,22 @@ pub fn king_moves() {
 
     assert_eq!(moves, expected);
 
+    game = GameState::try_from_fen("8/8/k7/8/8/8/8/8").unwrap();
+    game.turn = Color::Black;
+
+    // should've just did this for all of them xd
+    let start = (0, 5);
+    let mut expected = vec![
+        Move::new(start, (0, 6)),
+        Move::new(start, (1, 6)),
+        Move::new(start, (1, 5)),
+        Move::new(start, (1, 4)),
+        Move::new(start, (0, 4)),
+    ];
+    expected.sort();
+
+    let mut moves: Vec<Move> = game.king_moves().to_vec();
+    moves.sort();
+
+    assert_eq!(moves, expected);
 }
