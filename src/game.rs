@@ -517,6 +517,7 @@ impl GameState {
         const MOVE_BOARD_RSHIFT: i8 = 49;
 
         move_board = shr(move_board, king_rshift-MOVE_BOARD_RSHIFT);
+        move_board &= !self.self_bb();
 
         let moveset = Self::moves_from_bb::<10>(move_board, right_shift_to_coords(king_rshift as u8));
 
