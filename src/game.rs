@@ -4,6 +4,7 @@ use std::fs::{self, File};
 use std::path::Path;
 use std::io::{BufReader, BufWriter};
 
+use crate::magic::print_bitboard;
 use crate::{magic::MagicTable, movegen::*};
 
 // thanks https://stackoverflow.com/questions/47582781/multi-line-integer-literals-in-rust
@@ -511,7 +512,7 @@ impl GameState {
         let king_rshift: i8 = king_bb.leading_zeros() as i8;
 
         // king bitboard at position (1, 1)
-        let mut move_board: u64 = 0x705060;
+        let mut move_board: u64 = 0xE0A0E0;
         // right shift of the kings position in move_board
         const MOVE_BOARD_RSHIFT: i8 = 49;
 
@@ -722,19 +723,36 @@ mod tests {
 
 #[test]
 pub fn king_moves() {
+
+    // king at 3, 4
     let mut game = GameState::try_from_fen("rnbqkbnr/pppppppp/8/3K4/8/8/PPPPPPPP/RNBQ1BNR").unwrap();
     game.init_magics();
     game.turn = Color::White;
 
     let mut expected = vec![
-        Move::new((4, 4), (4, 5)),
-        Move::new((4, 4), (5, 5)),
-        Move::new((4, 4), (5, 4)),
-        Move::new((4, 4), (5, 3)),
-        Move::new((4, 4), (4, 3)),
-        Move::new((4, 4), (3, 3)),
-        Move::new((4, 4), (3, 4)),
-        Move::new((4, 4), (3, 5)),
+        Move::new((3, 4), (3, 5)),
+        Move::new((3, 4), (4, 5)),
+        Move::new((3, 4), (4, 4)),
+        Move::new((3, 4), (4, 3)),
+        Move::new((3, 4), (3, 3)),
+        Move::new((3, 4), (2, 3)),
+        Move::new((3, 4), (2, 4)),
+        Move::new((3, 4), (2, 5)),
+    ];
+    expected.sort();
+
+    let mut moves: Vec<Move> = game.king_moves().to_vec();
+    moves.sort();
+
+    // white king at 4, 2 with some surrounding pieces
+    game = GameState::try_from_fen("rnbqk1nr/pppppp1p/6p1/8/4Pb2/5K2/PPPP1PPP/RNBQ1BNR").unwrap();
+
+    let mut expected = vec![
+        Move::new((5, 2), (5, 3)),
+        Move::new((5, 2), (6, 3)),
+        Move::new((5, 2), (6, 2)),
+        Move::new((5, 2), (4, 2)),
+        Move::new((5, 2), (4, 1)),
     ];
     expected.sort();
 
