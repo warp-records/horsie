@@ -3,6 +3,8 @@ use serde::{Serialize, Deserialize};
 use std::fs::{self, File};
 use std::path::Path;
 use std::io::{BufReader, BufWriter};
+// use bitbybit::bitfield;
+// use arbitrary_int::*;
 
 use crate::magic::print_bitboard;
 use crate::{magic::MagicTable, movegen::*};
@@ -62,23 +64,77 @@ pub struct GameState {
     // threats: u64,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-pub struct Move {
-    src: (u8, u8),
-    dest: (u8, u8),
-    promo: Option<PieceType>,
-    castle: bool,
+#[derive(Debug, Clone)]
+struct Move {
+    // src_x: 0..=2
+    // src_y: 3..=5
+    // dest_x: 6..=8
+    // dest_y: 9..=11
+    // is_promo: 12
+    // promo_type: 13..=14
+    fields: u16
+}
+
+impl Move {
+    pub fn src_x(&self) -> u8 {
+        (self.fields & 0b111) as u8
+    }
+
+    pub fn src_y(&self) -> u8 {
+        (self.fields >> 3 & 0b111) as u8
+    }
+
+    pub fn dest_x(&self) -> u8 {
+        (self.fields >> 6 & 0b111) as u8
+    }
+
+    pub fn dest_y(&self) -> u8 {
+        (self.fields >> 9 & 0b111) as u8
+    }
+
+    pub fn is_promo(&self) -> u8 {
+        (self.fields >> 12 & 0b1) as u8
+    }
+
+    pub fn promo_type(&self) -> u8 {
+        (self.fields >> 13 & 0b11) as u8
+    }
+}
+
+impl PartialEq for Move {
+    fn eq(&self, other: &Self) -> bool {
+        self.fields == other.fields
+    }
+}
+
+impl Eq for Move {}
+
+impl PartialOrd for Move {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Move {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.fields.cmp(&other.fields)
+    }
 }
 
 impl Move {
     pub fn new(src: (u8, u8), dest: (u8, u8)) -> Self {
-        Move {
-            src: src,
-            dest: dest,
-            promo: None,
-            castle: false,
+        let mut fields: u16 = 0;
+
+        fields |= src.0 as u16 & 0b111;
+        fields |= (src.1 as u16 & 0b111) << 3;
+        fields |= (dest.0 as u16 & 0b111) << 6;
+        fields |= (dest.1 as u16 & 0b111) << 9;
+
+        Self {
+            fields
         }
     }
+
 }
 
 #[derive(Serialize, Deserialize)]
@@ -454,8 +510,8 @@ impl GameState {
             bishops_bb ^= rs_to_bb(shift);
 
             let blockers = self.black | self.white & !coords_to_bb(src.0, src.1);
-            let magics_straight = self.magics_diagonal.as_ref().unwrap();
-            let mut moves_bb = magics_straight[src.0 as usize][src.1 as usize].get_ray(blockers).unwrap();
+            let magics_diagonal = self.magics_diagonal.as_ref().unwrap();
+            let mut moves_bb = magics_diagonal[src.0 as usize][src.1 as usize].get_ray(blockers).unwrap();
 
             moves_bb &= !self_bb;
             let curr_moves = Self::moves_from_bb::<13>(moves_bb, src);
@@ -530,6 +586,33 @@ impl GameState {
 
         moveset
     }
+
+    // TODO: support N queens
+    // pub fn queen_moves(&self) -> ArrayVec<Move, 54> {
+    //     let mut moves = ArrayVec::new();
+
+    //     let mut queens_bb: u64 = self.self_bb() & self.queens;
+
+    //     for i in 0..1 {
+    //         let shift = queens_bb.leading_zeros();
+    //         let curr = rs_to_bb(shift);
+    //         let src = right_shift_to_coords(shift as u8);
+
+    //         queens_bb &= !curr;
+
+    //         let blockers = self.black | self.white & !coords_to_bb(src.0, src.1);
+    //         let magics_diagonal = self.magics_diagonal.as_ref().unwrap();
+    //         let magics_straight = self.magics_straight.as_ref().unwrap();
+
+    //         let mut moves_bb = magics_diagonal[src.0 as usize][src.1 as usize].get_ray(blockers).unwrap();
+    //         moves_bb |= magics_straight[src.0 as usize][src.1 as usize].get_ray(blockers).unwrap();
+
+    //         let curr_moves = moves_from_bb<54>(src, moves_bb);
+
+    //     }
+
+    //     ArrayVec::new()
+    // }
 }
 
 #[cfg(test)]
