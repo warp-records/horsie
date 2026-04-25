@@ -31,6 +31,7 @@ enum Color {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(u8)]
 enum PieceType {
     King,
     Queen,
@@ -75,32 +76,6 @@ struct Move {
     fields: u16
 }
 
-impl Move {
-    pub fn src_x(&self) -> u8 {
-        (self.fields & 0b111) as u8
-    }
-
-    pub fn src_y(&self) -> u8 {
-        (self.fields >> 3 & 0b111) as u8
-    }
-
-    pub fn dest_x(&self) -> u8 {
-        (self.fields >> 6 & 0b111) as u8
-    }
-
-    pub fn dest_y(&self) -> u8 {
-        (self.fields >> 9 & 0b111) as u8
-    }
-
-    pub fn is_promo(&self) -> u8 {
-        (self.fields >> 12 & 0b1) as u8
-    }
-
-    pub fn promo_type(&self) -> u8 {
-        (self.fields >> 13 & 0b11) as u8
-    }
-}
-
 impl PartialEq for Move {
     fn eq(&self, other: &Self) -> bool {
         self.fields == other.fields
@@ -135,6 +110,17 @@ impl Move {
         }
     }
 
+    pub fn src_x(&self) -> u8 { (self.fields & 0b111) as u8 }
+    pub fn src_y(&self) -> u8 { (self.fields >> 3 & 0b111) as u8 }
+    pub fn dest_x(&self) -> u8 { (self.fields >> 6 & 0b111) as u8 }
+    pub fn dest_y(&self) -> u8 { (self.fields >> 9 & 0b111) as u8 }
+    pub fn is_promo(&self) -> u8 { (self.fields >> 12 & 0b1) as u8 }
+    pub fn promo_type(&self) -> u8 { (self.fields >> 13 & 0b11) as u8 }
+
+    pub fn set_promo(&mut self, piece_type: PieceType) {
+        self.fields |= 0b1 << 12;
+        self.fields |= (piece_type as u16) << 13;
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -615,6 +601,7 @@ impl GameState {
     // }
 }
 
+// ---------- TESTS ----------
 #[cfg(test)]
 mod tests {
     use super::*;
